@@ -600,7 +600,7 @@ Address.prototype.getHumanReadable = function () {
 }
 
 Address.prototype.MarshalBinary = function () {
-  return Buffer.concat([intToBuffer(this.Amount), this.RCDHash])
+  return Buffer.concat([encodeVarInt(this.Amount), this.RCDHash])
 }
 
 /**
@@ -830,6 +830,44 @@ function Signature (msg, secretKey) {
  */
 Signature.prototype.MarshalBinary = function () {
   return this.Sig
+}
+
+    MSB = new BN('8000000000000000', 16);
+
+// VarInt encoding taken from : https://github.com/PaulBernier/factomjs (Thanks!)
+// Reference implementation:
+// https://github.com/FactomProject/factomd/blob/master/common/primitives/varint.go#L78-L105
+function encodeVarInt(val) {
+    const bytes = [];
+
+    if (val === 0) {
+        bytes.push(0);
+    }
+
+    const h = new BN(val);
+    let start = false;
+
+    if (!h.and(MSB).isZero()) {
+        bytes.push(0x81);
+        start = true;
+    }
+
+    for (let i = 0; i < 9; ++i) {
+        let b = h.shrn(56).maskn(8).toNumber();
+
+        if (b || start) {
+            start = true;
+            if (i !== 8) {
+                b = b | 0x80;
+            } else {
+                b = b & 0x7F;
+            }
+            bytes.push(b);
+        }
+        h.ishln(7);
+    }
+
+    return Buffer.from(bytes);
 }
 
 module.exports = {
