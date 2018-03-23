@@ -14591,21 +14591,21 @@ utils.intFromLE = intFromLE;
 
 },{"bn.js":17,"minimalistic-assert":107,"minimalistic-crypto-utils":108}],82:[function(require,module,exports){
 module.exports={
-  "_from": "elliptic@^6.0.0",
+  "_from": "elliptic@6.4.0",
   "_id": "elliptic@6.4.0",
   "_inBundle": false,
   "_integrity": "sha1-ysmvh2LIWDYYcAPI3+GT5eLq5d8=",
   "_location": "/elliptic",
   "_phantomChildren": {},
   "_requested": {
-    "type": "range",
+    "type": "version",
     "registry": true,
-    "raw": "elliptic@^6.0.0",
+    "raw": "elliptic@6.4.0",
     "name": "elliptic",
     "escapedName": "elliptic",
-    "rawSpec": "^6.0.0",
+    "rawSpec": "6.4.0",
     "saveSpec": null,
-    "fetchSpec": "^6.0.0"
+    "fetchSpec": "6.4.0"
   },
   "_requiredBy": [
     "/browserify-sign",
@@ -14613,8 +14613,8 @@ module.exports={
   ],
   "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.4.0.tgz",
   "_shasum": "cac9af8762c85836187003c8dfe193e5e2eae5df",
-  "_spec": "elliptic@^6.0.0",
-  "_where": "/Users/stevenmasley/go/src/github.com/Emyrk/factomjs-util/node_modules/browserify-sign",
+  "_spec": "elliptic@6.4.0",
+  "_where": "/home/steven/go/src/github.com/Emyrk/factomjs-util",
   "author": {
     "name": "Fedor Indutny",
     "email": "fedor@indutny.com"
@@ -42097,7 +42097,7 @@ Address.prototype.getHumanReadable = function () {
 };
 
 Address.prototype.MarshalBinary = function () {
-  return Buffer.concat([intToBuffer(this.Amount), this.RCDHash]);
+  return Buffer.concat([encodeVarInt(this.Amount), this.RCDHash]);
 };
 
 /**
@@ -42328,6 +42328,44 @@ function Signature(msg, secretKey) {
 Signature.prototype.MarshalBinary = function () {
   return this.Sig;
 };
+
+MSB = new BN('8000000000000000', 16);
+
+// VarInt encoding taken from : https://github.com/PaulBernier/factomjs (Thanks!)
+// Reference implementation:
+// https://github.com/FactomProject/factomd/blob/master/common/primitives/varint.go#L78-L105
+function encodeVarInt(val) {
+  var bytes = [];
+
+  if (val === 0) {
+    bytes.push(0);
+  }
+
+  var h = new BN(val);
+  var start = false;
+
+  if (!h.and(MSB).isZero()) {
+    bytes.push(0x81);
+    start = true;
+  }
+
+  for (var i = 0; i < 9; ++i) {
+    var b = h.shrn(56).maskn(8).toNumber();
+
+    if (b || start) {
+      start = true;
+      if (i !== 8) {
+        b = b | 0x80;
+      } else {
+        b = b & 0x7F;
+      }
+      bytes.push(b);
+    }
+    h.ishln(7);
+  }
+
+  return Buffer.from(bytes);
+}
 
 module.exports = {
   baToJSON: baToJSON,
