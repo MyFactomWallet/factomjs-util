@@ -1,3 +1,8 @@
+# Deprecated
+## This project is no longer maintained
+
+This project is no longer maintained. A fuller version of this library with more features can be found [here](https://github.com/PaulBernier/factomjs)
+
 # SYNOPSIS
 [![NPM Package](https://img.shields.io/npm/v/ethereumjs-util.svg?style=flat-square)](https://www.npmjs.com/package/factomjs-util)
 [![Build Status](https://travis-ci.org/Emyrk/factomjs-util.svg?branch=master)](https://travis-ci.org/Emyrk/factomjs-util)
